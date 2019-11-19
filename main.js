@@ -35,7 +35,7 @@ var app = http.createServer(function(request, response) {
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
   var pathname = url.parse(_url, true).pathname;
-  console.log(pathname);
+  var qs = require("querystring");
   if (pathname === "/") {
     if (queryData.id === undefined) {
       fs.readdir("./data", function(error, filelist) {
@@ -76,7 +76,7 @@ var app = http.createServer(function(request, response) {
         title,
         list,
         `
-        <form action="http://localhost:3000/process_create" method="post">
+        <form action="http://localhost:3000/create_process" method="post">
           <p><input type="text" name="title" placeholder="title"/></p>
           <p>
             <textarea name="description" placeholder="description"></textarea>
@@ -90,6 +90,21 @@ var app = http.createServer(function(request, response) {
       response.writeHead(200);
       response.end(template);
     });
+  } else if (pathname === "/create_process") {
+    var body = "";
+    // 정보 수신 시작
+    request.on("data", function(data) {
+      body = body + data;
+    });
+    // 정보 수신 종료
+    request.on("end", function() {
+      var post = qs.parse(body);
+      var title = post.title;
+      var description = post.description;
+      console.log(post.title);
+    });
+    response.writeHead(200);
+    response.end("success");
   } else {
     response.writeHead(404);
     response.end("Not found");
