@@ -1,9 +1,10 @@
 var http = require("http");
 var fs = require("fs");
 var url = require("url");
+var qs = require("querystring");
 
 function templateHTML(title, list, body) {
-  return ` 
+  return `
   <!doctype html>
   <html>
   <head>
@@ -17,9 +18,8 @@ function templateHTML(title, list, body) {
     ${body}
   </body>
   </html>
-    `;
+  `;
 }
-
 function templateList(filelist) {
   var list = "<ul>";
   var i = 0;
@@ -35,7 +35,6 @@ var app = http.createServer(function(request, response) {
   var _url = request.url;
   var queryData = url.parse(_url, true).query;
   var pathname = url.parse(_url, true).pathname;
-  var qs = require("querystring");
   if (pathname === "/") {
     if (queryData.id === undefined) {
       fs.readdir("./data", function(error, filelist) {
@@ -52,10 +51,7 @@ var app = http.createServer(function(request, response) {
       });
     } else {
       fs.readdir("./data", function(error, filelist) {
-        fs.readFile(`data/${queryData.id}`, "utf-8", function(
-          err,
-          description
-        ) {
+        fs.readFile(`data/${queryData.id}`, "utf8", function(err, description) {
           var title = queryData.id;
           var list = templateList(filelist);
           var template = templateHTML(
@@ -76,15 +72,15 @@ var app = http.createServer(function(request, response) {
         title,
         list,
         `
-        <form action="http://localhost:3000/create_process" method="post">
-          <p><input type="text" name="title" placeholder="title"/></p>
-          <p>
-            <textarea name="description" placeholder="description"></textarea>
-          </p>
-          <p>
-            <input type="submit" />
-          </p>
-      </form>
+          <form action="http://localhost:3000/create_process" method="post">
+            <p><input type="text" name="title" placeholder="title"></p>
+            <p>
+              <textarea name="description" placeholder="description"></textarea>
+            </p>
+            <p>
+              <input type="submit">
+            </p>
+          </form>
         `
       );
       response.writeHead(200);
@@ -92,19 +88,18 @@ var app = http.createServer(function(request, response) {
     });
   } else if (pathname === "/create_process") {
     var body = "";
-    // 정보 수신 시작
     request.on("data", function(data) {
       body = body + data;
     });
-    // 정보 수신 종료
     request.on("end", function() {
       var post = qs.parse(body);
       var title = post.title;
       var description = post.description;
-      console.log(post.title);
+      fs.writeFile(`data/${title}`, description, "utf8", function(err) {
+        response.writeHead(302, { Location: `/?id=${qs.escape(title)}` });
+        response.end();
+      });
     });
-    response.writeHead(200);
-    response.end("success");
   } else {
     response.writeHead(404);
     response.end("Not found");
