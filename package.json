@@ -20,6 +20,6 @@
   },
   "homepage": "https://github.com/totalintelli/web2-nodejs#readme",
   "dependencies": {
-    "sanitize-html": "^1.20.1"
+    "sanitize-html": "^2.3.2"
   }
 }
